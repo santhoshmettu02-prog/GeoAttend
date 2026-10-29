@@ -1,0 +1,14 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>body{font:14px system-ui,sans-serif;color:#e5e7eb;background:transparent;margin:0}button{background:#14b8a6;color:#06201e;border:0;border-radius:8px;padding:10px 16px;font-weight:700;cursor:pointer}button:disabled{opacity:.6}.msg{margin-top:8px;color:#a7f3d0}.err{color:#fca5a5}</style></head><body>
+<button id="locate">Get my current location</button><div id="message" class="msg">Location permission is requested only when you press the button.</div>
+<script>
+const button=document.getElementById('locate'), message=document.getElementById('message');
+function send(type,value){parent.postMessage({isStreamlitMessage:true,type:type,...value},'*')}
+function setValue(value){send('streamlit:setComponentValue',{value:value,dataType:'json'})}
+function height(){send('streamlit:setFrameHeight',{height:72})}
+window.addEventListener('message',e=>{if(e.data&&e.data.type==='streamlit:render')height()});
+send('streamlit:componentReady',{apiVersion:1});
+button.onclick=()=>{if(!navigator.geolocation){message.className='err';message.textContent='This browser does not support geolocation.';return}button.disabled=true;message.className='msg';message.textContent='Waiting for GPS…';navigator.geolocation.getCurrentPosition(pos=>{const v={latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy,captured_at:new Date().toISOString()};setValue(v);message.textContent=`Location captured (accuracy ±${Math.round(v.accuracy)} m).`;button.disabled=false},err=>{message.className='err';message.textContent=err.code===1?'Location permission was denied. Allow it in browser settings and try again.':err.code===2?'Location is unavailable. Check device location services.':'Location request timed out. Try again.';button.disabled=false},{enableHighAccuracy:true,timeout:20000,maximumAge:0})};height();
+</script></body></html>
+
+
